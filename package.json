@@ -1,0 +1,13 @@
+{
+  "name": "grandstay",
+  "private": true,
+  "workspaces": ["cms", "frontend"],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=cms\" \"npm run dev --workspace=frontend\"",
+    "build:cms": "npm run build --workspace=cms",
+    "build:frontend": "npm run build --workspace=frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
