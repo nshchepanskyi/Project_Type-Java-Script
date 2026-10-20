@@ -1,4 +1,3 @@
-// Types for API responses
 export interface NavItem {
   label: string
   path: string
@@ -41,9 +40,19 @@ export interface Room {
   services?: Array<{ id: string; name: string; price: number }>
 }
 
+export interface RoomsResponse {
+  docs: Room[]
+  totalDocs: number
+  totalPages: number
+  page: number
+  hasNextPage: boolean
+  hasPrevPage: boolean
+}
+
 export interface SearchParams {
   location?: string
-  checkIn?: string
-  checkOut?: string
-  guests?: number
+  check_in?: string
+  check_out?: string
+  guests?: string
+  roomType?: string
 }
