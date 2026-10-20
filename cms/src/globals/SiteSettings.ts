@@ -13,6 +13,16 @@ export const SiteSettings: GlobalConfig = {
       required: true,
     },
     {
+      name: 'siteTagline',
+      type: 'text',
+      defaultValue: 'Comfortable rooms in the heart of the city',
+    },
+    {
+      name: 'supportEmail',
+      type: 'email',
+      defaultValue: 'support@grandstay.hotel',
+    },
+    {
       name: 'serviceFeeRate',
       type: 'number',
       defaultValue: 0.12,
