@@ -5,6 +5,7 @@ import config from '@payload-config'
 
 const serverFunctions = handleServerFunctions({
   config,
+  importMap,
 })
 
 type Args = {
