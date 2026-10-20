@@ -1,4 +1,4 @@
-import { handleServerFunctions } from '@payloadcms/next/utilities'
+import { handleServerFunctions } from '@payloadcms/next/layouts'
 import { RootPage } from '@payloadcms/next/views'
 import { importMap } from '../../importMap'
 import config from '@payload-config'
