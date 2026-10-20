@@ -30,43 +30,6 @@ async function navigate(path: string) {
       const filtered = await fetchRooms({ ...params, depth: '1', limit: '50' }).catch(() => ({ docs: [] }))
       const allRooms: Room[] = filtered.docs || []
 
-      content = `
-        <section class="p-page-head">
-          <h1>Book a place</h1>
-          <p class="hero-sub">Pick your dates — we show only the rooms that are free.</p>
-          <form class="search-panel" id="search-form" method="get">
-            <div class="sp-field">
-              <span>Location</span>
-              <input type="text" name="location" value="${params.location || ''}" placeholder="Where are you going?" />
-            </div>
-            <div class="sp-field">
-              <span>Check In</span>
-              <input type="date" name="check_in" value="${params.check_in || ''}" />
-            </div>
-            <div class="sp-field">
-              <span>Check Out</span>
-              <input type="date" name="check_out" value="${params.check_out || ''}" />
-            </div>
-            <div class="sp-field">
-              <span>Guests</span>
-              <input type="number" name="guests" value="${params.guests || '1'}" min="1" max="8" />
-            </div>
-            <button type="submit" class="btn primary sp-btn">Search</button>
-          </form>
-        </section>
-        <section class="section">
-          <div class="section-head">
-            <h2>Recommended places</h2>
-            <span class="found-count">Places found: ${allRooms.length}</span>
-          </div>
-          <div class="place-grid">
-            ${renderBlocks([{ type: 'rooms-grid' }], { rooms: allRooms, searchQuery: qs })
-              .replace(/<section[^>]*>.*?<div class="place-grid">/, '')
-              .replace(/<\/div>\s*<\/section>$/, '')}
-          </div>
-        </section>
-      `
-      // simpler approach — render cards directly
       const { renderPlaceCard } = await import('./blocks/placeCard')
       const cards = allRooms.length
         ? allRooms.map(r => renderPlaceCard(r, qs)).join('')
@@ -92,6 +55,15 @@ async function navigate(path: string) {
             <div class="sp-field">
               <span>Guests</span>
               <input type="number" name="guests" value="${params.guests || '1'}" min="1" max="8" />
+            </div>
+            <div class="sp-field">
+              <span>Room type</span>
+              <select name="roomType">
+                <option value="">Any</option>
+                <option value="Single" ${params.roomType === 'Single' ? 'selected' : ''}>Single</option>
+                <option value="Double" ${params.roomType === 'Double' ? 'selected' : ''}>Double</option>
+                <option value="Suite"  ${params.roomType === 'Suite'  ? 'selected' : ''}>Suite</option>
+              </select>
             </div>
             <button type="submit" class="btn primary sp-btn">Search</button>
           </form>
