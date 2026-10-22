@@ -1,11 +1,13 @@
 import type { CollectionConfig } from 'payload'
+import { canSeeStaffAdmin, isStaffUser, staffOnly } from '../access/roles'
 
 export const Reservations: CollectionConfig = {
   slug: 'reservations',
   access: {
+    admin: canSeeStaffAdmin,
     read: async ({ req }) => {
       if (!req.user) return false
-      if (req.user.role === 'admin' || req.user.role === 'manager') return true
+      if (isStaffUser(req.user)) return true
       const guests = await req.payload.find({
         collection: 'guests',
         where: { email: { equals: req.user.email } },
@@ -18,7 +20,7 @@ export const Reservations: CollectionConfig = {
     create: ({ req }) => Boolean(req.user),
     update: async ({ req }) => {
       if (!req.user) return false
-      if (req.user.role === 'admin' || req.user.role === 'manager') return true
+      if (isStaffUser(req.user)) return true
       const guests = await req.payload.find({
         collection: 'guests',
         where: { email: { equals: req.user.email } },
@@ -53,7 +55,7 @@ export const Reservations: CollectionConfig = {
           depth: 0,
           overrideAccess: true,
         })
-        const isStaff = user.role === 'admin' || user.role === 'manager'
+        const isStaff = isStaffUser(user)
         if (!isStaff && guest.email?.toLowerCase() !== user.email?.toLowerCase()) {
           throw new Error('You can only book for your own account.')
         }
@@ -155,7 +157,7 @@ export const Reservations: CollectionConfig = {
       defaultValue: 'Pending',
       required: true,
       access: {
-        update: ({ req }) => req.user?.role === 'admin' || req.user?.role === 'manager',
+        update: ({ req }) => isStaffUser(req.user),
       },
     },
   ],

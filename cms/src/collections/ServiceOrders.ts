@@ -1,7 +1,15 @@
 import type { CollectionConfig } from 'payload'
+import { canSeeStaffAdmin, staffOnly } from '../access/roles'
 
 export const ServiceOrders: CollectionConfig = {
   slug: 'service-orders',
+  access: {
+    admin: canSeeStaffAdmin,
+    read: staffOnly,
+    create: staffOnly,
+    update: staffOnly,
+    delete: staffOnly,
+  },
   admin: {
     useAsTitle: 'id',
     defaultColumns: ['reservation', 'serviceName', 'quantity', 'total', 'paid', 'status'],

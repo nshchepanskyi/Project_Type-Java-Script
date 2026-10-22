@@ -92,6 +92,7 @@ export async function renderBookings(): Promise<string> {
 }
 
 export async function renderFavorites(): Promise<string> {
+  if (!getSession()) return renderLogin('Sign in to save and view your favorite rooms.')
   const keys = getFavoriteNumbers()
   const rooms: Room[] = keys.length ? (await fetchRooms({ depth: '1', limit: '100' })).docs.filter(room => keys.includes(room.number)) : []
   const cards = rooms.map(room => renderPlaceCard(room)).join('')

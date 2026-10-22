@@ -1,11 +1,15 @@
 import type { Room } from './types'
 
-const CMS_URL = (import.meta.env.VITE_CMS_URL || '').replace(/\/$/, '')
+export const CMS_URL = (import.meta.env.VITE_CMS_URL || (import.meta.env.DEV ? 'http://localhost:3001' : '')).replace(/\/$/, '')
 const SESSION_KEY = 'grandstay.session'
 
 export interface Session {
   token: string
   user: { id: number | string; email: string; name?: string; role?: string }
+}
+
+export function isStaff(session: Session | null = getSession()): boolean {
+  return session?.user.role === 'admin' || session?.user.role === 'manager'
 }
 
 export interface Reservation {
@@ -63,7 +67,24 @@ export async function fetchPage(path: string) {
 }
 
 export async function fetchRooms(params?: Record<string, string>) {
-  const qs = params ? '?' + new URLSearchParams(params).toString() : ''
+  const query = new URLSearchParams()
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      const normalized = value?.trim()
+      if (!normalized) continue
+      if (key === 'location') {
+        query.set('where[location][contains]', normalized)
+      } else if (key === 'roomType') {
+        query.set('where[roomType][equals]', normalized)
+      } else if (key === 'guests') {
+        query.set('where[capacity][greater_than_equal]', normalized)
+      } else {
+        query.set(key, normalized)
+      }
+    }
+  }
+  const search = query.toString()
+  const qs = search ? `?${search}` : ''
   return request<{ docs: Room[]; totalDocs: number }>(`/api/rooms${qs}`)
 }
 

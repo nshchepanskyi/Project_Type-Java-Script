@@ -1,9 +1,15 @@
 import type { GlobalConfig } from 'payload'
+import { canSeeStaffAdmin, staffOnly } from '../access/roles'
 
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
+  access: {
+    read: staffOnly,
+    update: staffOnly,
+  },
   admin: {
     group: 'Settings',
+    hidden: ({ user }) => !canSeeStaffAdmin({ req: { user } }),
   },
   fields: [
     {

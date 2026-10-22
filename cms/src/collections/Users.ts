@@ -1,15 +1,17 @@
 import type { CollectionConfig } from 'payload'
+import { canSeeStaffAdmin, isStaffUser } from '../access/roles'
 
 export const Users: CollectionConfig = {
   slug: 'users',
   auth: true,
   access: {
+    admin: canSeeStaffAdmin,
     // Public account creation is required for the site's registration form.
     // The role field below remains admin-only, so new accounts use `guest`.
     create: () => true,
     read: ({ req }) => {
       if (!req.user) return false
-      if (req.user.role === 'admin' || req.user.role === 'manager') return true
+      if (isStaffUser(req.user)) return true
       return { id: { equals: req.user.id } }
     },
     update: ({ req, id }) => {

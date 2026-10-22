@@ -1,20 +1,22 @@
 import type { CollectionConfig } from 'payload'
+import { canSeeStaffAdmin, isStaffUser, staffOnly } from '../access/roles'
 
 export const Guests: CollectionConfig = {
   slug: 'guests',
   access: {
+    admin: canSeeStaffAdmin,
     read: ({ req }) => {
       if (!req.user) return false
-      if (req.user.role === 'admin' || req.user.role === 'manager') return true
+      if (isStaffUser(req.user)) return true
       return { email: { equals: req.user.email } }
     },
     create: ({ req }) => Boolean(req.user),
     update: ({ req }) => {
       if (!req.user) return false
-      if (req.user.role === 'admin' || req.user.role === 'manager') return true
+      if (isStaffUser(req.user)) return true
       return { email: { equals: req.user.email } }
     },
-    delete: ({ req }) => req.user?.role === 'admin',
+    delete: ({ req }) => isStaffUser(req.user),
   },
   admin: {
     useAsTitle: 'name',
@@ -23,7 +25,7 @@ export const Guests: CollectionConfig = {
   hooks: {
     beforeChange: [
       ({ data, req }) => {
-        if (req.user && req.user.role !== 'admin' && req.user.role !== 'manager') {
+        if (req.user && !isStaffUser(req.user)) {
           return { ...data, email: req.user.email }
         }
         return data

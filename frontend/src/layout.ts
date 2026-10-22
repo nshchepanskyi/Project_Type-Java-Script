@@ -1,10 +1,20 @@
 import type { CommonData } from './types'
-import { getSession } from './api'
+import { CMS_URL, getSession, isStaff } from './api'
 
 export function renderLayout(common: CommonData, content: string, currentPath: string): string {
   const session = getSession()
-  const links = [...common.nav]
-  if (!links.some(item => item.path === '/favorites')) links.push({ label: 'Favorites', path: '/favorites' })
+  const staff = isStaff(session)
+  const links = common.nav.map(item => staff && item.path === '/bookings'
+    ? { label: 'Reservations', path: `${CMS_URL}/admin/collections/reservations` }
+    : item)
+  if (staff) {
+    links.push(
+      { label: 'Dashboard', path: `${CMS_URL}/admin` },
+      { label: 'Rooms', path: `${CMS_URL}/admin/collections/rooms` },
+      { label: 'Guests', path: `${CMS_URL}/admin/collections/guests` },
+    )
+  }
+  if (session && !links.some(item => item.path === '/favorites')) links.push({ label: 'Favorites', path: '/favorites' })
   const nav = links
     .map(item => `<a href="${item.path}" class="${currentPath === item.path || (item.path !== '/' && currentPath.startsWith(item.path + '/')) ? 'active' : ''}">${item.label}</a>`)
     .join('')

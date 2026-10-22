@@ -10,7 +10,7 @@ export async function GET(request: Request) {
 
   let settings: { siteName?: string } = {}
   try {
-    settings = await payload.findGlobal({ slug: 'site-settings' })
+    settings = await payload.findGlobal({ slug: 'site-settings', overrideAccess: true })
   } catch {
     settings = { siteName: 'GrandStay' }
   }

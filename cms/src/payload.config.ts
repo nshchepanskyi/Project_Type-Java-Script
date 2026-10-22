@@ -37,7 +37,7 @@ export default buildConfig({
       handler: async (req) => {
         const { payload } = req
 
-        const settings = await payload.findGlobal({ slug: 'site-settings' })
+        const settings = await payload.findGlobal({ slug: 'site-settings', overrideAccess: true })
 
         const nav = [
           { label: 'Home', path: '/' },

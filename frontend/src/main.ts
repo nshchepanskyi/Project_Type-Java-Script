@@ -19,7 +19,7 @@ import {
   escapeHtml,
 } from './pages'
 import { toggleFavorite } from './favorites'
-import { signOut } from './api'
+import { CMS_URL, getSession, isStaff, signOut } from './api'
 import './style.css'
 
 const app = document.getElementById('app')!
@@ -36,7 +36,20 @@ async function navigate(path: string) {
 
     let content = ''
 
-    if (path === '/' || path === '') {
+    const adminDestinations: Record<string, string> = {
+      '/admin': '/admin',
+      '/dashboard': '/admin',
+      '/manage/rooms': '/admin/collections/rooms',
+      '/manage/guests': '/admin/collections/guests',
+      '/manage/reservations': '/admin/collections/reservations',
+    }
+    if (adminDestinations[path]) {
+      if (isStaff()) {
+        window.location.assign(`${CMS_URL}${adminDestinations[path]}`)
+        return
+      }
+      content = `<section class="access-denied"><div class="card"><h1>Access restricted</h1><p>This page is available to GrandStay staff only.</p><a class="btn primary" href="/">Back to the site</a></div></section>`
+    } else if (path === '/' || path === '') {
       const blocks: PageBlock[] = [
         { type: 'hero' },
         { type: 'rooms-grid' },
@@ -222,6 +235,11 @@ function initInteractivity() {
       event.stopPropagation()
       const number = button.dataset.room
       if (!number) return
+      if (!getSession()) {
+        history.pushState(null, '', '/login')
+        navigate('/login')
+        return
+      }
       const saved = toggleFavorite(number)
       button.classList.toggle('on', saved)
       button.textContent = saved ? '★' : '☆'
