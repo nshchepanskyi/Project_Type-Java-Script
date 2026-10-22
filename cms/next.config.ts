@@ -1,3 +1,4 @@
+import '@payloadcms/next/css'
 import type { NextConfig } from 'next'
 import { withPayload } from '@payloadcms/next/withPayload'
 
