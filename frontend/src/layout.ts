@@ -1,8 +1,12 @@
 import type { CommonData } from './types'
+import { getSession } from './api'
 
 export function renderLayout(common: CommonData, content: string, currentPath: string): string {
-  const nav = common.nav
-    .map(item => `<a href="${item.path}" class="${item.path === currentPath ? 'active' : ''}">${item.label}</a>`)
+  const session = getSession()
+  const links = [...common.nav]
+  if (!links.some(item => item.path === '/favorites')) links.push({ label: 'Favorites', path: '/favorites' })
+  const nav = links
+    .map(item => `<a href="${item.path}" class="${currentPath === item.path || (item.path !== '/' && currentPath.startsWith(item.path + '/')) ? 'active' : ''}">${item.label}</a>`)
     .join('')
 
   const footerLinks = common.footer.links
@@ -18,7 +22,9 @@ export function renderLayout(common: CommonData, content: string, currentPath: s
       <nav class="p-nav" id="p-nav">${nav}</nav>
       <div class="p-actions">
         <button class="btn ghost" id="theme-toggle" type="button">◐</button>
-        <a class="btn primary p-signin" href="/login">Sign In</a>
+        ${session
+          ? `<a class="p-user" href="/profile">${escapeHtml(session.user.name || session.user.email)}</a><button class="btn ghost" id="sign-out" type="button">Sign Out</button>`
+          : `<a class="btn primary p-signin" href="/login">Sign In</a>`}
       </div>
     </header>
 
@@ -36,4 +42,10 @@ export function renderLayout(common: CommonData, content: string, currentPath: s
 
     <div class="nav-overlay" id="nav-overlay"></div>
   `
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  })[char]!)
 }

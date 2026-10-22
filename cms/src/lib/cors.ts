@@ -17,13 +17,14 @@ export function corsHeaders(request: Request): Record<string, string> {
   }
 }
 
-/** Preflight handler for the hand-written API routes. */
+/** Preflight handler for both hand-written and Payload REST API routes. */
 export function optionsResponse(request: Request): Response {
   return new Response(null, {
     status: 204,
     headers: {
       ...corsHeaders(request),
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Authorization, Content-Type, Accept, Origin, X-Requested-With, X-Payload-HTTP-Method-Override',
     },
   })
 }

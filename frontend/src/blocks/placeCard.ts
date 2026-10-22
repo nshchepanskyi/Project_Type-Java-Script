@@ -1,5 +1,6 @@
 import type { Room } from '../types'
 import { roomPhotoUrl } from '../roomPhotos'
+import { isFavorite } from '../favorites'
 
 export function renderPlaceCard(room: Room, searchQuery = ''): string {
   const isAvailable = room.status === 'Available'
@@ -29,12 +30,9 @@ export function renderPlaceCard(room: Room, searchQuery = ''): string {
   return `
     <article class="place-card">
       <a class="place-link" href="${detailUrl}" tabindex="-1" aria-hidden="true">
-        <div class="place-photo">
-          <span class="place-tag ${tagClass}">${tagLabel}</span>
-          ${photoHtml}
-          <button class="fav-star" type="button" aria-label="Add to favorites" data-room="${room.number}">☆</button>
-        </div>
+        <div class="place-photo"><span class="place-tag ${tagClass}">${tagLabel}</span>${photoHtml}</div>
       </a>
+      <button class="fav-star${isFavorite(room.number) ? ' on' : ''}" type="button" aria-label="${isFavorite(room.number) ? 'Remove from' : 'Add to'} favorites" data-room="${room.number}">${isFavorite(room.number) ? '★' : '☆'}</button>
       <div class="place-body">
         <a class="place-link place-title" href="${detailUrl}">${room.title}</a>
         <div class="place-meta">

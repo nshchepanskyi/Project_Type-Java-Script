@@ -18,6 +18,10 @@ export const Users: CollectionConfig = {
       options: ['admin', 'manager', 'guest'],
       defaultValue: 'guest',
       required: true,
+      access: {
+        create: ({ req }) => req.user?.role === 'admin',
+        update: ({ req }) => req.user?.role === 'admin',
+      },
     },
   ],
 }

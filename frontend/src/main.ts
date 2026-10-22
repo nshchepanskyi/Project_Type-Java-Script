@@ -1,17 +1,35 @@
-import { fetchCommon, fetchRooms } from './api'
+import { fetchCommon, fetchPage, fetchRooms } from './api'
 import { roomPhotoUrl } from './roomPhotos'
 import { renderLayout } from './layout'
 import { renderBlocks } from './blocks/renderBlocks'
 import type { PageBlock, Room } from './types'
+import {
+  renderBookingForm,
+  renderBookings,
+  renderFavorites,
+  renderLogin,
+  renderProfile,
+  renderRegister,
+  renderStaticPage,
+  setRouteRenderer,
+  submitBooking,
+  submitLogin,
+  submitProfile,
+  submitRegistration,
+  escapeHtml,
+} from './pages'
+import { toggleFavorite } from './favorites'
+import { signOut } from './api'
 import './style.css'
 
 const app = document.getElementById('app')!
 
 async function navigate(path: string) {
+  path = path.split('?')[0]
   try {
     const [common, roomsData] = await Promise.all([
       fetchCommon(),
-      fetchRooms({ depth: '1', limit: '8' }).catch(() => ({ docs: [] })),
+      path === '/' || path === '' ? fetchRooms({ depth: '1', limit: '8' }).catch(() => ({ docs: [] })) : Promise.resolve({ docs: [] as Room[] }),
     ])
 
     const rooms: Room[] = roomsData.docs || []
@@ -80,7 +98,7 @@ async function navigate(path: string) {
     } else if (path.startsWith('/places/')) {
       const number = path.split('/')[2]
       const { fetchRoom } = await import('./api')
-      const room: Room = await fetchRoom(number).catch(() => null)
+      const room: Room | null = await fetchRoom(number).catch(() => null)
 
       if (!room) {
         content = `<div class="empty-state"><h2>Room not found</h2><a class="btn ghost" href="/places">Back</a></div>`
@@ -99,7 +117,7 @@ async function navigate(path: string) {
           <div class="place-detail">
             <div>
               <div class="pd-photo">
-                <span class="place-tag ${isAvail ? 'ok' : 'busy'}">${isAvail ? 'Available now' : 'Occupied'}</span>
+              <span class="place-tag ${isAvail ? 'ok' : 'busy'}">${isAvail ? 'Available' : room.status === 'Occupied' ? 'Booked' : room.status}</span>
                 ${photoHtml}
               </div>
               <div class="pd-body">
@@ -139,6 +157,27 @@ async function navigate(path: string) {
           </div>
         `
       }
+    } else if (path === '/login') {
+      content = renderLogin()
+    } else if (path === '/register') {
+      content = renderRegister()
+    } else if (path === '/profile') {
+      content = renderProfile(new URLSearchParams(location.search).has('updated') ? 'Profile updated.' : '')
+    } else if (path === '/bookings' || path === '/reservations') {
+      content = await renderBookings()
+    } else if (path === '/bookings/new' || path === '/reservations/new') {
+      content = await renderBookingForm()
+    } else if (path === '/favorites') {
+      content = await renderFavorites()
+    } else if (path === '/verify-email') {
+      content = `<article class="p-doc"><h1>Email verification</h1><p>Email verification is not enabled for this deployment. You can sign in with the account you registered.</p><a class="btn primary" href="/login">Sign in</a></article>`
+    } else if (['/terms', '/privacy', '/help'].includes(path)) {
+      try {
+        const page = await fetchPage(path)
+        content = `<article class="p-doc"><h1>${escapeHtml(page.meta.title)}</h1>${page.meta.description ? `<p>${escapeHtml(page.meta.description)}</p>` : ''}${renderBlocks(page.blocks as PageBlock[])}</article>`
+      } catch {
+        content = renderStaticPage(path.slice(1))
+      }
     } else {
       content = `<div class="empty-state"><h2>Page not found</h2><a class="btn ghost" href="/">Home</a></div>`
     }
@@ -157,6 +196,8 @@ async function navigate(path: string) {
   }
 }
 
+setRouteRenderer(navigate)
+
 function initInteractivity() {
   // Theme toggle
   const themeBtn = document.getElementById('theme-toggle')
@@ -168,6 +209,26 @@ function initInteractivity() {
       localStorage.setItem('theme', html.getAttribute('data-theme') || 'light')
     })
   }
+
+  document.getElementById('sign-out')?.addEventListener('click', () => {
+    signOut()
+    history.pushState(null, '', '/')
+    navigate('/')
+  })
+
+  document.querySelectorAll<HTMLButtonElement>('.fav-star[data-room]').forEach(button => {
+    button.addEventListener('click', event => {
+      event.preventDefault()
+      event.stopPropagation()
+      const number = button.dataset.room
+      if (!number) return
+      const saved = toggleFavorite(number)
+      button.classList.toggle('on', saved)
+      button.textContent = saved ? '★' : '☆'
+      button.setAttribute('aria-label', `${saved ? 'Remove from' : 'Add to'} favorites`)
+      if (!saved && location.pathname === '/favorites') navigate('/favorites')
+    })
+  })
 
   // SPA navigation — intercept internal links
   document.querySelectorAll<HTMLAnchorElement>('a[href]').forEach(a => {
@@ -195,6 +256,62 @@ function initInteractivity() {
       navigate(target)
     })
   }
+
+  const loginForm = document.getElementById('login-form') as HTMLFormElement | null
+  loginForm?.addEventListener('submit', async event => {
+    event.preventDefault()
+    try { await submitLogin(loginForm) } catch (err) { showFormError(loginForm, err) }
+  })
+
+  const registerForm = document.getElementById('register-form') as HTMLFormElement | null
+  registerForm?.addEventListener('submit', async event => {
+    event.preventDefault()
+    try { await submitRegistration(registerForm) } catch (err) { showFormError(registerForm, err) }
+  })
+
+  const profileForm = document.getElementById('profile-form') as HTMLFormElement | null
+  profileForm?.addEventListener('submit', async event => {
+    event.preventDefault()
+    try { await submitProfile(profileForm) } catch (err) { showFormError(profileForm, err) }
+  })
+
+  const bookingForm = document.getElementById('booking-form') as HTMLFormElement | null
+  bookingForm?.addEventListener('submit', async event => {
+    event.preventDefault()
+    const message = document.getElementById('booking-message')
+    if (!message) return
+    message.innerHTML = ''
+    try {
+      await submitBooking(bookingForm)
+      message.innerHTML = `<div class="msg success">Booking request received. <a href="/bookings">View my bookings</a></div>`
+      bookingForm.reset()
+    } catch (err) {
+      message.innerHTML = `<div class="msg error">${escapeHtml(err instanceof Error ? err.message : String(err))}</div>`
+    }
+  })
+
+  const stayType = bookingForm?.elements.namedItem('stayType') as HTMLSelectElement | null
+  const checkOut = bookingForm?.elements.namedItem('checkOut') as HTMLInputElement | null
+  const nightOnly = checkOut?.closest('.night-only') as HTMLElement | null
+  const syncStayType = () => {
+    if (!stayType || !checkOut || !nightOnly) return
+    const dayUse = stayType.value === 'Day'
+    nightOnly.hidden = dayUse
+    checkOut.required = !dayUse
+    if (dayUse) checkOut.value = (bookingForm?.elements.namedItem('checkIn') as HTMLInputElement | null)?.value || ''
+  }
+  stayType?.addEventListener('change', syncStayType)
+  const checkInInput = bookingForm?.elements.namedItem('checkIn') as HTMLInputElement | null
+  checkInInput?.addEventListener('change', syncStayType)
+  syncStayType()
+}
+
+function showFormError(form: HTMLFormElement, error: unknown) {
+  form.querySelector('.page-message')?.remove()
+  const node = document.createElement('div')
+  node.className = 'msg error page-message'
+  node.textContent = error instanceof Error ? error.message : String(error)
+  form.prepend(node)
 }
 
 function initBurger() {
