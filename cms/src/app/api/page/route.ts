@@ -3,6 +3,8 @@ export const dynamic = 'force-dynamic'
 import config from '@payload-config'
 import { getPayload } from 'payload'
 
+import { corsHeaders, optionsResponse } from '../../../lib/cors'
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   const pagePath = searchParams.get('path') || '/'
@@ -17,14 +19,22 @@ export async function GET(req: Request) {
 
   const page = pages.docs[0]
   if (!page) {
-    return Response.json({ error: 'Page not found' }, { status: 404 })
+    return Response.json({ error: 'Page not found' }, {
+      status: 404,
+      headers: corsHeaders(req),
+    })
   }
 
-  return Response.json({
-    meta: {
-      title: page.title,
-      description: page.description || '',
+  return Response.json(
+    {
+      meta: {
+        title: page.title,
+        description: page.description || '',
+      },
+      blocks: page.blocks || [],
     },
-    blocks: page.blocks || [],
-  })
+    { headers: corsHeaders(req) },
+  )
 }
+
+export const OPTIONS = optionsResponse
