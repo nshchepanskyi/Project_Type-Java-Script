@@ -477,6 +477,7 @@ input[type="file"]::file-selector-button:active{transform:scale(.97)}
 [data-theme="dark"] .place-tag.busy { background: #7f1d1d; color: #fecaca }
 .place-body { padding: 14px; display: flex; flex-direction: column; gap: 6px; flex: 1 }
 .place-title { font-weight: 700; font-size: 15.5px }
+.place-title:hover { color: var(--l-brand); text-decoration: none }
 .place-meta {
   display: flex;
   justify-content: space-between;
@@ -496,6 +497,7 @@ input[type="file"]::file-selector-button:active{transform:scale(.97)}
 }
 .place-price { font-size: 18px; font-weight: 800 }
 .place-price small { font-size: 12px; font-weight: 500; color: var(--l-muted) }
+.place-foot .btn { padding: 7px 13px; border-radius: 10px; font-weight: 600 }
 
 .empty-state {
   grid-column: 1 / -1;

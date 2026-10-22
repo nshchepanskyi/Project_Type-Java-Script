@@ -4,7 +4,11 @@ import { roomPhotoUrl } from '../roomPhotos'
 export function renderPlaceCard(room: Room, searchQuery = ''): string {
   const isAvailable = room.status === 'Available'
   const tagClass = isAvailable ? 'ok' : 'busy'
-  const tagLabel = isAvailable ? 'Available now' : 'Occupied'
+  const tagLabel = isAvailable
+    ? 'Available'
+    : room.status === 'Occupied'
+      ? 'Booked'
+      : room.status
 
   const photoUrl = room.photo?.url || roomPhotoUrl(room.number)
   const photoHtml = photoUrl
