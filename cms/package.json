@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "node \"$npm_config_local_prefix/../node_modules/next/dist/bin/next\" dev --port 3001",
+    "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
     "generate:types": "payload generate:types",
