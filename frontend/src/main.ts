@@ -1,4 +1,5 @@
 import { fetchCommon, fetchRooms } from './api'
+import { roomPhotoUrl } from './roomPhotos'
 import { renderLayout } from './layout'
 import { renderBlocks } from './blocks/renderBlocks'
 import type { PageBlock, Room } from './types'
@@ -87,8 +88,9 @@ async function navigate(path: string) {
         const qs = location.search.slice(1)
         const params = Object.fromEntries(new URLSearchParams(qs))
         const serviceChips = (room.services || []).map(s => `<span class="chip">✓ ${s.name}</span>`).join('')
-        const photoHtml = room.photo?.url
-          ? `<img src="${room.photo.url}" alt="${room.title}">`
+        const photoUrl = room.photo?.url || roomPhotoUrl(room.number)
+        const photoHtml = photoUrl
+          ? `<img src="${photoUrl}" alt="${room.title}">`
           : `<span class="ph">PHOTO</span>`
         const isAvail = room.status === 'Available'
 

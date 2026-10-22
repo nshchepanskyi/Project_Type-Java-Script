@@ -428,6 +428,7 @@ input[type="file"]::file-selector-button:active{transform:scale(.97)}
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, .06);
   animation: l-fadeUp .45s cubic-bezier(.22, .61, .36, 1) backwards;
   transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
 }

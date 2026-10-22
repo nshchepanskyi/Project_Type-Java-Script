@@ -1,12 +1,14 @@
 import type { Room } from '../types'
+import { roomPhotoUrl } from '../roomPhotos'
 
 export function renderPlaceCard(room: Room, searchQuery = ''): string {
   const isAvailable = room.status === 'Available'
   const tagClass = isAvailable ? 'ok' : 'busy'
   const tagLabel = isAvailable ? 'Available now' : 'Occupied'
 
-  const photoHtml = room.photo?.url
-    ? `<img src="${room.photo.url}" alt="${room.title}">`
+  const photoUrl = room.photo?.url || roomPhotoUrl(room.number)
+  const photoHtml = photoUrl
+    ? `<img src="${photoUrl}" alt="${room.title}" loading="lazy">`
     : `<span class="ph">PHOTO</span>`
 
   const serviceChips = (room.services || [])
