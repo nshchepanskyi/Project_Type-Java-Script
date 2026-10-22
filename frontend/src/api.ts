@@ -100,6 +100,7 @@ export async function signIn(email: string, password: string) {
     body: JSON.stringify({ email, password }),
   })
   saveSession(result)
+  await ensureGuestProfile(result.user.name || result.user.email).catch(() => undefined)
   return result
 }
 
@@ -116,16 +117,23 @@ export function signOut() {
 }
 
 export async function fetchMyReservations() {
-  const email = getSession()?.user.email
-  if (!email) throw new Error('Please sign in to view your bookings.')
-  const where = new URLSearchParams({
-    'where[guest.email][equals]': email,
-    depth: '1',
-    limit: '100',
-    sort: '-createdAt',
-  })
-  const result = await request<{ docs: Reservation[] }>(`/api/reservations?${where}`, {}, true)
+  if (!getSession()) throw new Error('Please sign in to view your bookings.')
+  const query = new URLSearchParams({ depth: '1', limit: '100', sort: '-createdAt' })
+  // Collection access applies the user's own guest IDs as a mandatory filter.
+  const result = await request<{ docs: Reservation[] }>(`/api/reservations?${query}`, {}, true)
   return result.docs
+}
+
+async function ensureGuestProfile(name: string) {
+  const session = getSession()
+  if (!session) return
+  const query = new URLSearchParams({ 'where[email][equals]': session.user.email, limit: '1' })
+  const existing = await request<{ docs: Array<{ id: number | string }> }>(`/api/guests?${query}`, {}, true)
+  if (existing.docs[0]) return
+  await request('/api/guests', {
+    method: 'POST',
+    body: JSON.stringify({ name, email: session.user.email }),
+  }, true)
 }
 
 export async function createReservation(input: {

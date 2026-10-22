@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, Where } from 'payload'
 import { canSeeStaffAdmin, isStaffUser, staffOnly } from '../access/roles'
 
 export const Reservations: CollectionConfig = {
@@ -15,7 +15,12 @@ export const Reservations: CollectionConfig = {
         overrideAccess: true,
       })
       const ids = guests.docs.map((guest) => guest.id)
-      return ids.length ? { guest: { in: ids } } : false
+      // A newly registered account may not have a guest profile yet. Return an
+      // empty-result constraint rather than denying access to the empty list.
+      const ownReservations: Where = ids.length
+        ? { guest: { in: ids } }
+        : { id: { equals: -1 } }
+      return ownReservations
     },
     create: ({ req }) => Boolean(req.user),
     update: async ({ req }) => {
