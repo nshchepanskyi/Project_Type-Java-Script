@@ -239,6 +239,14 @@ input[type="file"]::file-selector-button:active{transform:scale(.97)}
   display: flex;
   flex-direction: column;
 }
+/* The body contains the SPA root as its only child; make that root a column too
+   so short pages keep the footer at the bottom of the viewport. */
+.public #app {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  min-height: 100vh;
+}
 [data-theme="dark"] .public {
   --l-bg: #0b1220;
   --l-surface: #111827;
